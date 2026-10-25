@@ -15,3 +15,5 @@ Currently under development.
 - Multi-stage Docker image
 - Docker Compose deployment with Nginx
 - Jenkins CI/CD pipeline with automated testing and deployment
+
+<!-- CI/CD automatic trigger test -->
