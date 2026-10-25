@@ -88,4 +88,28 @@ class CalculatorControllerTest {
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").exists());
     }
+
+    @Test
+    void shouldRejectNaNInput() throws Exception {
+        mockMvc.perform(get("/api/v1/add")
+                        .param("a", "NaN")
+                        .param("b", "2"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldRejectPositiveInfinityInput() throws Exception {
+        mockMvc.perform(get("/api/v1/add")
+                        .param("a", "Infinity")
+                        .param("b", "2"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldRejectNegativeInfinityInput() throws Exception {
+        mockMvc.perform(get("/api/v1/add")
+                        .param("a", "-Infinity")
+                        .param("b", "2"))
+                .andExpect(status().isBadRequest());
+    }
 }
