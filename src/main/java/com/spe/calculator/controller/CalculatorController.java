@@ -1,10 +1,12 @@
 package com.spe.calculator.controller;
 
 import com.spe.calculator.service.CalculatorService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -18,10 +20,21 @@ public class CalculatorController {
         this.calculatorService = calculatorService;
     }
 
+    private void validateInputs(double a, double b) {
+        if (!Double.isFinite(a) || !Double.isFinite(b)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Inputs must be finite numbers"
+            );
+        }
+    }
+
     @GetMapping("/add")
     public Map<String, Object> add(
             @RequestParam double a,
             @RequestParam double b) {
+
+        validateInputs(a, b);
 
         return Map.of(
                 "operation", "add",
@@ -36,6 +49,8 @@ public class CalculatorController {
             @RequestParam double a,
             @RequestParam double b) {
 
+        validateInputs(a, b);
+
         return Map.of(
                 "operation", "subtract",
                 "a", a,
@@ -49,6 +64,8 @@ public class CalculatorController {
             @RequestParam double a,
             @RequestParam double b) {
 
+        validateInputs(a, b);
+
         return Map.of(
                 "operation", "multiply",
                 "a", a,
@@ -61,6 +78,8 @@ public class CalculatorController {
     public Map<String, Object> divide(
             @RequestParam double a,
             @RequestParam double b) {
+
+        validateInputs(a, b);
 
         return Map.of(
                 "operation", "divide",
