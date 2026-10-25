@@ -29,7 +29,8 @@ class CalculatorControllerTest {
                 .andExpect(jsonPath("$.operation").value("add"))
                 .andExpect(jsonPath("$.a").value(10.0))
                 .andExpect(jsonPath("$.b").value(5.0))
-                .andExpect(jsonPath("$.result").value(15.0));
+                // TEMPORARY: Deliberately incorrect to test Jenkins failure notifications.
+                .andExpect(jsonPath("$.result").value(999.0));
     }
 
     @Test
