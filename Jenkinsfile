@@ -102,10 +102,57 @@ pipeline {
     post {
         success {
             echo 'Build, tests, Docker publishing, deployment, and health check succeeded!'
+
+            emailext(
+                to: 'praneethem8@gmail.com',
+                subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """\
+Hello,
+
+Your Calculator CI/CD pipeline completed successfully!
+
+Job: ${env.JOB_NAME}
+Build: #${env.BUILD_NUMBER}
+Status: SUCCESS
+Docker Image: ${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}
+
+The application was built, tested, published to Docker Hub,
+deployed, and health-checked successfully.
+
+Build URL: ${env.BUILD_URL}
+
+Regards,
+Jenkins
+"""
+            )
         }
+
         failure {
             echo 'Pipeline failed. Check the stage logs.'
+
+            emailext(
+                to: 'praneethem8@gmail.com',
+                subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """\
+Hello,
+
+Your Calculator CI/CD pipeline failed.
+
+Job: ${env.JOB_NAME}
+Build: #${env.BUILD_NUMBER}
+Status: FAILURE
+
+Build URL: ${env.BUILD_URL}
+
+Please open the Jenkins build and inspect Console Output
+to identify the cause of the failure.
+
+Regards,
+Jenkins
+"""
+            )
         }
+
         always {
             sh 'docker logout >/dev/null 2>&1 || true'
         }
