@@ -212,7 +212,7 @@ Calculator_devops/
 ├── .dockerignore
 ├── .gitignore
 ├── Dockerfile
-├── compose.yaml
+├── docker-compose.yml
 ├── Jenkinsfile
 ├── mvnw
 ├── mvnw.cmd
