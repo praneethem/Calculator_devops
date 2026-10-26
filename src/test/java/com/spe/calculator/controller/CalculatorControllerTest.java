@@ -29,7 +29,6 @@ class CalculatorControllerTest {
                 .andExpect(jsonPath("$.operation").value("add"))
                 .andExpect(jsonPath("$.a").value(10.0))
                 .andExpect(jsonPath("$.b").value(5.0))
-                // TEMPORARY: Deliberately incorrect to test Jenkins failure notifications.
                 .andExpect(jsonPath("$.result").value(15.0));
     }
 
@@ -95,7 +94,11 @@ class CalculatorControllerTest {
         mockMvc.perform(get("/api/v1/add")
                         .param("a", "NaN")
                         .param("b", "2"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message")
+                        .value("Inputs must be finite numbers"))
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
@@ -103,7 +106,11 @@ class CalculatorControllerTest {
         mockMvc.perform(get("/api/v1/add")
                         .param("a", "Infinity")
                         .param("b", "2"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message")
+                        .value("Inputs must be finite numbers"))
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
@@ -111,6 +118,10 @@ class CalculatorControllerTest {
         mockMvc.perform(get("/api/v1/add")
                         .param("a", "-Infinity")
                         .param("b", "2"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message")
+                        .value("Inputs must be finite numbers"))
+                .andExpect(jsonPath("$.status").value(400));
     }
 }
