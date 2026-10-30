@@ -1,58 +1,33 @@
 # Calculator REST API — CI/CD Pipeline
 
-An end-to-end DevOps mini-project that automates the building, testing, containerization, and deployment of a Calculator REST API using **Java, Spring Boot, Maven, Jenkins, Docker, Docker Compose, Nginx, and GitHub**.
+An end-to-end CI/CD mini-project that builds, tests, containerizes, and deploys a Calculator REST API using **Java 21, Spring Boot, Maven, Jenkins, Docker, Docker Compose, Nginx, and GitHub**.
 
-**GitHub:** [Calculator_devops](https://github.com/praneethem/Calculator_devops)  
-**Docker Hub:** [calculator-api](https://hub.docker.com/r/praneethem/calculator-api)
+**GitHub Repository:** https://github.com/praneethem/Calculator_devops  
+**Docker Hub:** https://hub.docker.com/r/praneethem/calculator-api
 
-## Architecture
+## 1. Application Overview
 
-```text
-Developer → GitHub → Jenkins Pipeline
-                         |
-                   Build & Test
-                         |
-                    Docker Build
-                         |
-                     Docker Hub
-                         |
-                  Docker Compose
-                    /         \
-                  Nginx    Calculator API
-                 :8088         :8080
-                         |
-                    Health Check
-                         |
-                  Email Notification
-```
+The Calculator REST API supports four arithmetic operations:
 
-## Technology Stack
+| Operation | Endpoint |
+|---|---|
+| Addition | `GET /api/v1/add?a=10&b=20` |
+| Subtraction | `GET /api/v1/subtract?a=10&b=5` |
+| Multiplication | `GET /api/v1/multiply?a=10&b=5` |
+| Division | `GET /api/v1/divide?a=10&b=5` |
+| Health Check | `GET /actuator/health` |
 
-- **Backend:** Java 21, Spring Boot
-- **Build and Testing:** Maven, JUnit 5, MockMvc
-- **Version Control:** Git, GitHub
-- **CI/CD:** Jenkins
-- **Containerization:** Docker
-- **Deployment:** Docker Compose, Nginx
-- **Health Checks:** Spring Boot Actuator
+The API accepts numeric query parameters and returns JSON responses.
 
-## API Endpoints
+Invalid or missing parameters and division by zero return HTTP `400 Bad Request` with a structured JSON error response.
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/v1/add?a=10&b=20` | Addition |
-| GET | `/api/v1/subtract?a=10&b=5` | Subtraction |
-| GET | `/api/v1/multiply?a=10&b=5` | Multiplication |
-| GET | `/api/v1/divide?a=10&b=5` | Division |
-| GET | `/actuator/health` | Application health |
-
-### Example: Addition
+### Example API Request
 
 ```bash
-curl "http://localhost:8088/api/v1/add?a=10&b=20"
+curl "http://localhost:8080/api/v1/add?a=10&b=20"
 ```
 
-Response:
+**Example response:**
 
 ```json
 {
@@ -63,9 +38,7 @@ Response:
 }
 ```
 
-Division by zero and invalid inputs return HTTP `400 Bad Request` with a structured JSON error response.
-
-## Getting Started
+## 2. Build and Test
 
 ### Prerequisites
 
@@ -73,6 +46,7 @@ Division by zero and invalid inputs return HTTP `400 Bad Request` with a structu
 - Git
 - Docker Engine
 - Docker Compose v2
+- Maven Wrapper (included in the repository)
 
 ### Clone the Repository
 
@@ -81,135 +55,177 @@ git clone https://github.com/praneethem/Calculator_devops.git
 cd Calculator_devops
 ```
 
-### Build and Test
-
-Build the application and run the tests:
+### Build the Application
 
 ```bash
 ./mvnw -B clean package
 ```
 
-Run the tests separately:
+### Run Tests
 
 ```bash
 ./mvnw -B test
 ```
 
-The test suite covers arithmetic operations, invalid inputs, missing parameters, and division by zero. Unit tests and Spring MVC integration tests are included.
+The test suite includes JUnit 5 unit tests for arithmetic operations and error cases, along with Spring MVC integration tests using MockMvc.
 
-### Run Locally
+Maven generates JUnit XML test reports under:
 
-Start the application:
+```text
+target/surefire-reports/
+```
+
+These reports are published by Jenkins.
+
+## 3. Run the Application Locally
+
+Start the Spring Boot application:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-The application uses port `8080` by default. If that port is occupied, start it on port `8081`:
+The application runs on port `8080` by default.
 
-```bash
-SERVER_PORT=8081 ./mvnw spring-boot:run
-```
-
-Example request for the default port:
+Test the API:
 
 ```bash
 curl "http://localhost:8080/api/v1/add?a=10&b=20"
 ```
 
-### Run with Docker
+Check application health:
 
-Build the application image:
+```bash
+curl -i http://localhost:8080/actuator/health
+```
+
+If port `8080` is occupied, start the application on another port:
+
+```bash
+SERVER_PORT=8081 ./mvnw spring-boot:run
+```
+
+## 4. Run with Docker
+
+Build the Docker image:
 
 ```bash
 docker build -t calculator-api:local .
 ```
 
-Run the standalone container:
+Run the container:
 
 ```bash
 docker run --rm -p 8082:8080 calculator-api:local
 ```
 
-Test the container:
+Call the API:
 
 ```bash
 curl "http://localhost:8082/api/v1/add?a=10&b=20"
 ```
 
-## Docker Compose Deployment
+The Dockerfile uses a multi-stage build with Maven/JDK for building and a slim JRE runtime image. The application runs as a non-root user.
 
-The deployment includes the Calculator API and Nginx. The application is accessible through Nginx on port `8088`.
+## 5. Deploy with Docker Compose
 
-Start the stack:
+The Docker Compose deployment contains two services:
+
+- **Calculator API:** Spring Boot application running internally on port `8080`.
+- **Nginx:** Reverse proxy that exposes the API on host port `8088`.
+
+Start the complete stack:
 
 ```bash
 docker compose up -d
 ```
 
-Check the running services:
+Check running containers:
 
 ```bash
 docker compose ps
 ```
 
-Check application health:
-
-```bash
-curl -i "http://localhost:8088/actuator/health"
-```
-
-Test the API through Nginx:
+Call the API through Nginx:
 
 ```bash
 curl "http://localhost:8088/api/v1/add?a=10&b=20"
 ```
 
-Stop the stack:
+Verify application health:
+
+```bash
+curl -i http://localhost:8088/actuator/health
+```
+
+Stop the deployment:
 
 ```bash
 docker compose down
 ```
 
-The Compose configuration includes a bridge network, an application health check, restart policies, and environment configuration.
+The Compose configuration includes a bridge network, health checks, restart policies, and environment configuration.
 
-## CI/CD Pipeline
+## 6. CI/CD Pipeline
 
-The declarative Jenkins pipeline is defined in `Jenkinsfile` and configured for the `main` branch.
+The project uses a declarative Jenkins pipeline defined in the `Jenkinsfile`.
+
+### Pipeline Workflow
 
 | Stage | Description |
 |---|---|
-| Checkout | Retrieves source code from GitHub |
-| Build | Compiles and packages the application using Maven |
-| Test | Runs automated tests and publishes JUnit results |
-| Docker Build | Builds the application image |
-| Docker Push | Pushes the image to Docker Hub |
-| Deploy Compose | Deploys the application using Docker Compose |
-| Health Check | Verifies application health |
-| Notifications | Sends success or failure email notifications |
+| Checkout | Checks out the latest source code from GitHub. |
+| Build | Builds and packages the Spring Boot application using Maven. |
+| Test | Runs automated tests and publishes JUnit reports. |
+| Docker Build | Builds the Docker image using the Jenkins build number as its tag. |
+| Docker Push | Publishes the image to Docker Hub using Jenkins-managed credentials. |
+| Deploy Compose | Deploys the application using Docker Compose. |
+| Health Check | Verifies the deployed application's health. |
 
-**Trigger:** The Jenkins job is configured to poll the GitHub repository approximately every two minutes.
+### Automatic Triggers
 
-Docker Hub credentials are stored in Jenkins Credentials. Email notifications use the configured SMTP settings.
+The Jenkins job supports:
 
-## Docker Hub
+- **GitHub Webhook:** Automatically triggers the pipeline when a push event occurs in the repository.
+- **Poll SCM:** Periodically checks GitHub for changes as a fallback trigger.
 
-The application image is published to:
+The webhook integration was verified using an actual GitHub push, which successfully triggered a Jenkins build.
 
-**[praneethem/calculator-api](https://hub.docker.com/r/praneethem/calculator-api)**
+### Email Notifications
 
-The Jenkins pipeline tags Docker images with the corresponding build number.
+Jenkins sends email notifications for successful and failed builds using configured SMTP and Extended Email Notification settings.
 
-## Project Structure
+Docker Hub credentials are stored securely in the Jenkins Credentials store and are not hardcoded in the pipeline.
+
+## 7. Docker Hub
+
+The application Docker image is published to:
+
+**https://hub.docker.com/r/praneethem/calculator-api**
+
+The Jenkins pipeline publishes images tagged with the corresponding build number.
+
+To pull a published image:
+
+```bash
+docker pull praneethem/calculator-api:<build-number>
+```
+
+Replace `<build-number>` with an available image tag.
+
+## 8. Project Structure
 
 ```text
 Calculator_devops/
+├── .mvn/
 ├── src/
 │   ├── main/
 │   └── test/
 ├── nginx/
 │   └── default.conf
+├── screenshots/
 ├── .dockerignore
+├── .gitattributes
 ├── .gitignore
 ├── Dockerfile
 ├── docker-compose.yml
@@ -217,21 +233,11 @@ Calculator_devops/
 ├── mvnw
 ├── mvnw.cmd
 ├── pom.xml
-└── README.md
+├── HELP.md
+├── README.md
+└── IMT2023555_Praneeth_Marudi.pdf
 ```
 
-## Security
+## Author
 
-- Store credentials in Jenkins Credentials rather than source code.
-- Do not commit passwords, access tokens, or other secrets.
-- The application container runs as a non-root user.
-
----
-
-**Author:** Praneeth Marudi
-
-
-<!-- Automatic Jenkins trigger verification -->
-
-
-Webhook integration test
+**Praneeth Marudi**  
